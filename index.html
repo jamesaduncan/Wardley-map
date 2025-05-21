@@ -1,8 +1,28 @@
-# Wardley-map
-A web component to draw Wardley Maps
+<!DOCTYPE html>
+<html lang="en"><head>
+        <title>Hello, world!</title>
+        <script type="module" src="./index.mjs"></script>
+        <style>
+            body {
+                font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+            }
 
-# Example
+            wardley-component {
+                font-family: Georgia, 'Times New Roman', Times, serif;
+                width: 30px;
+                height: 30px;
+                border: 1px solid black;
+                color: white;
+            }
 
+            wardley-dependency {
+                color: black;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>An Example Wardley Map</h1>
+        
         <wardley-map>
             <wardley-component id="c-cup-of-tea" name="Cup of Tea" evolution="custom">
                 <wardley-dependency target="c-cup"></wardley-dependency>
@@ -37,3 +57,5 @@ A web component to draw Wardley Maps
             <wardley-component id="c-electricty" name="Electricity" evolution="commodity"></wardley-component>
             
         </wardley-map>
+    </body>
+</html>
