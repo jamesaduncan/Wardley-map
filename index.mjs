@@ -1,3 +1,20 @@
+class WardleyComponent extends HTMLElement {
+    connectedCallback() {
+        // Set default values for attributes if not provided
+        if (!this.hasAttribute('evolution')) {
+            this.setAttribute('evolution', 'custom');
+        }
+        if (!this.hasAttribute('name')) {
+            this.setAttribute('name', 'Unnamed');
+        }
+    }
+
+    get dependencies() {
+        return this.querySelectorAll('wardley-dependency');
+    }
+}
+
+
 class WardleyMap extends HTMLElement {
     constructor() {
         super();
@@ -5,6 +22,9 @@ class WardleyMap extends HTMLElement {
 
         // Initialize MutationObserver
         this.observer = new MutationObserver(() => this.render());
+
+        // Track if the render method has been called before
+        this.hasRendered = false;
     }
 
     connectedCallback() {
@@ -19,7 +39,63 @@ class WardleyMap extends HTMLElement {
         this.observer.disconnect();
     }
 
+    restackComponents() {
+        const components = Array.from(this.querySelectorAll('wardley-component'));
+        const dependencies = Array.from(this.querySelectorAll('wardley-dependency'));
+
+        // Check if the observer is already disconnected
+        if (this.observer) {
+            this.observer.disconnect();
+        }
+
+        // Create a map of dependencies
+        const dependencyMap = new Map();
+        components.forEach(component => {
+            dependencyMap.set(component.id, []);
+        });
+
+        dependencies.forEach(dependency => {
+            const sourceId = dependency.parentElement.id;
+            const targetId = dependency.getAttribute('target');
+            if (dependencyMap.has(sourceId)) {
+                dependencyMap.get(sourceId).push(targetId);
+            }
+        });
+
+        // Perform a topological sort to determine stacking order
+        const visited = new Set();
+        const stack = [];
+
+        const visit = (componentId) => {
+            if (!visited.has(componentId)) {
+                visited.add(componentId);
+                (dependencyMap.get(componentId) || []).forEach(visit);
+                stack.push(componentId);
+            }
+        };
+
+        components.forEach(component => visit(component.id));
+
+        // Re-arrange components in the DOM based on the sorted order
+        stack.reverse().forEach(componentId => {
+            const component = this.querySelector(`#${componentId}`);
+            if (component) {
+                this.appendChild(component);
+            }
+        });
+
+        // Resume the observer after restacking
+        if (this.observer) {
+            this.observer.observe(this, { childList: true, attributes: true, subtree: true });
+        }
+    }
+
     render() {
+        console.log(`rendering wardley map`);
+
+        // Re-arrange components before rendering
+        this.restackComponents();
+
         const components = Array.from(this.querySelectorAll('wardley-component'));
         const dependencies = Array.from(this.querySelectorAll('wardley-dependency'));
 
@@ -89,7 +165,7 @@ class WardleyMap extends HTMLElement {
 
             // Add X-axis labels
             Object.entries(evolutionPositions).forEach(([label, position]) => {
-                const text = document.createElementNS(svgNS, 'text');
+                const text = document.createElementNS(svgNS, 'text');                
                 text.setAttribute('x', position);
                 text.setAttribute('y', '565');
                 text.setAttribute('font-size', '12');
@@ -115,7 +191,8 @@ class WardleyMap extends HTMLElement {
 
         // Calculate y-axis positions dynamically
         const yBase = 50; // Start from the top
-        const yStep = 50;
+        const yMax = 550; // Ensure components stay above the x-axis
+        const yStep = Math.min((yMax - yBase) / components.length, 50); // Dynamically adjust spacing to fit all components
 
         // Map evolution to x-axis positions
         const evolutionPositions = {
@@ -125,8 +202,10 @@ class WardleyMap extends HTMLElement {
             'commodity': 700
         };
 
+        // Clear existing elements in SVG to re-arrange everything
+        Array.from(svg.querySelectorAll('line.graph-element, circle.graph-element, text.graph-element')).forEach(el => el.remove());
+
         // Draw dependencies first
-        const existingLines = new Set(Array.from(svg.querySelectorAll('line')).map(line => line.outerHTML));
         dependencies.forEach(dependency => {
             const sourceId = dependency.parentElement.id;
             const targetId = dependency.getAttribute('target');
@@ -140,6 +219,7 @@ class WardleyMap extends HTMLElement {
                 const targetCy = yBase + components.indexOf(target) * yStep;
 
                 const line = document.createElementNS(svgNS, 'line');
+                line.classList.add('graph-element');
                 line.setAttribute('x1', sourceCx);
                 line.setAttribute('y1', sourceCy);
                 line.setAttribute('x2', targetCx);
@@ -149,64 +229,70 @@ class WardleyMap extends HTMLElement {
                 const dependencyColor = getComputedStyle(dependency).color || 'black';
                 line.setAttribute('stroke', dependencyColor);
                 line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
 
-                if (!existingLines.has(line.outerHTML)) {
-                    svg.appendChild(line);
-
-                    // Add label for the dependency if it exists
-                    const labelElement = dependency.querySelector('label');
-                    console.log('drawing label')
-                    if (labelElement) {
-                        const labelText = labelElement.textContent || '';
-                        const label = document.createElementNS(svgNS, 'text');
-                        label.setAttribute('x', (sourceCx + targetCx) / 2); // Midpoint of the line
-                        label.setAttribute('y', (sourceCy + targetCy) / 2 - 5); // Slightly above the line
-                        label.setAttribute('font-size', '10');
-                        label.setAttribute('text-anchor', 'middle');
-                        label.textContent = labelText;
-                        svg.appendChild(label);
-                    }
+                // Add label for the dependency if it exists
+                const labelElement = dependency.querySelector('label');
+                if (labelElement) {
+                    const labelText = labelElement.textContent || '';
+                    const label = document.createElementNS(svgNS, 'text');
+                    label.classList.add('graph-element');
+                    label.setAttribute('x', (sourceCx + targetCx) / 2); // Midpoint of the line
+                    label.setAttribute('y', (sourceCy + targetCy) / 2 - 5); // Slightly above the line
+                    label.setAttribute('font-size', '10');
+                    label.setAttribute('text-anchor', 'middle');
+                    label.textContent = labelText;
+                    svg.appendChild(label);
                 }
             }
         });
 
         // Draw components on top of dependencies
-        const existingCircles = new Set(Array.from(svg.querySelectorAll('circle')).map(circle => circle.id));
         components.forEach((component, index) => {
-            if (!existingCircles.has(component.id)) {
-                const evolution = component.getAttribute('evolution') || 'custom';
-                const cx = evolutionPositions[evolution] || 300;
-                const cy = yBase + index * yStep; // Stack components top to bottom
+            const evolution = component.getAttribute('evolution') || 'custom';
+            const cx = evolutionPositions[evolution] || 300;
+            const cy = yBase + index * yStep; // Stack components top to bottom
 
-                const circle = document.createElementNS(svgNS, 'circle');
-                circle.setAttribute('id', component.id);
-                circle.setAttribute('cx', cx);
-                circle.setAttribute('cy', cy);
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.classList.add('graph-element');
+            circle.setAttribute('id', component.id);
+            circle.setAttribute('cx', cx);
+            circle.setAttribute('cy', cy);
 
-                // Dynamically set radius based on width/height from CSS
-                const width = parseFloat(getComputedStyle(component).width) || 20;
-                const height = parseFloat(getComputedStyle(component).height) || 20;
-                const radius = Math.min(width, height) / 2;
-                circle.setAttribute('r', radius);
+            // Dynamically set radius based on width/height from CSS
+            const width = parseFloat(getComputedStyle(component).width) || 20;
+            const height = parseFloat(getComputedStyle(component).height) || 20;
+            const radius = Math.min(width, height) / 2;
+            circle.setAttribute('r', radius);
 
-                // Apply border and color from CSS
-                const borderColor = getComputedStyle(component).borderColor || 'black';
-                const fillColor = getComputedStyle(component).color || 'blue';
-                circle.setAttribute('stroke', borderColor);
-                circle.setAttribute('stroke-width', '2');
-                circle.setAttribute('fill', fillColor);
-                svg.appendChild(circle);
+            // Apply border and color from CSS
+            const borderColor = getComputedStyle(component).borderColor || 'black';
+            const fillColor = getComputedStyle(component).color || 'blue';
+            circle.setAttribute('stroke', borderColor);
+            circle.setAttribute('stroke-width', '2');
+            circle.setAttribute('fill', fillColor);
+            svg.appendChild(circle);
 
-                const text = document.createElementNS(svgNS, 'text');
-                text.setAttribute('x', cx + radius + 5); // Adjust label position based on radius
-                text.setAttribute('y', cy + 5);
-                text.setAttribute('font-size', '12');
-                text.textContent = component.getAttribute('name') || 'Unnamed';
-                text.style.fontFamily = getComputedStyle(component).fontFamily; // Apply font-family from CSS
-                svg.appendChild(text);
-            }
+            const text = document.createElementNS(svgNS, 'text');
+            text.classList.add('graph-element');
+            text.setAttribute('x', cx + radius + 5); // Adjust label position based on radius
+            text.setAttribute('y', cy + 5);
+            text.setAttribute('font-size', '12');
+            text.textContent = component.getAttribute('name') || 'Unnamed';
+            text.style.fontFamily = getComputedStyle(component).fontFamily; // Apply font-family from CSS
+            svg.appendChild(text);
         });
+
+        // Dispatch a non-bubbling "change" event only on subsequent renderings
+        if (this.hasRendered) {
+            const changeEvent = new Event('change', { bubbles: false });
+            this.dispatchEvent(changeEvent);
+        }
+
+        // Mark as rendered
+        this.hasRendered = true;
     }
 }
 
 customElements.define('wardley-map', WardleyMap);
+customElements.define('wardley-component', WardleyComponent);

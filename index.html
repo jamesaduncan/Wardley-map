@@ -9,6 +9,11 @@
                 font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
             }
 
+            body main {
+                margin-left: 5em;
+                
+            }
+
             wardley-component {
                 font-family: Georgia, 'Times New Roman', Times, serif;
                 border: 1px solid black;
@@ -26,20 +31,29 @@
             wardley-map {
                 margin-left: 5em;;
             }
+
+            div#evolution-slider {
+                text-align: center;
+                display: inline-block;
+            }
+
+            section#map-editor {
+                margin-left: 5em;
+                margin-bottom: 2em;
+            }
         </style>
     </head>
     <body>
         <h1>An Example Wardley Map</h1>
 
+        <main>
         <p>
             A simple Web Component that allows you to create Wardley maps in HTML.
         </p>
         <p>
             First, import the module into your code:
 
-            <pre><code>
-            &lt;script type="module" src="https://jamesaduncan.github.io/Wardley-map/index.mjs"&gt;&lt;/script&gt;
-            </code></pre>            
+        <pre><code>&lt;script type="module" src="https://jamesaduncan.github.io/Wardley-map/index.mjs"&gt;&lt;/script&gt;</code></pre>            
         </p>
 
         <p>
@@ -54,11 +68,9 @@
             The following example demonstrates the canonical hot cup of tea map that is frequently
             used as an example.
         </p>
+        </main>
 
-        <inline-example include="true">
-
-        </inline-example>
-
+        <inline-example include="true" after="section#map-editor">
             <wardley-map>
                 <wardley-component id="c-cup-of-tea" name="Cup of Tea" evolution="custom">
                     <wardley-dependency target="c-cup"></wardley-dependency>
@@ -86,17 +98,104 @@
                 <wardley-component id="c-kettle" name="Kettle" evolution="product">
                     <wardley-dependency target="c-electricty"></wardley-dependency>
                     <wardley-dependency target="c-power-company" type="capital">
-                        <label>Capital Flow</label>
                     </wardley-dependecy>
                 </wardley-component>
 
-                <wardley-component id="c-water" name="Water" evolution="commodity">
-                </wardley-component>
+                <wardley-component id="c-water" name="Water" evolution="commodity"></wardley-component>
 
                 <wardley-component id="c-electricty" name="Electricity" evolution="commodity"></wardley-component>
-                <wardley-component id="c-power-company" name="Power Company" evolution="custom">
-                </wardley-dependency>
+                <wardley-component id="c-power-company" name="Power Company" evolution="custom"></wardley-component>
+
             </wardley-map>
+        </inline-example>
+
+        <section id="map-editor">
+            <h2>Map Editor</h2>
+            <form id="add-dependency">
+                <label for="source">Source:</label>
+                <select name="source">
+                </select>
+                <label for="target">Target:</label>
+                <select name="target">
+
+                </select>
+                <button type="submit">Add Dependency</button>
+            </form>
+
+            <form id="new-component">
+                <label for="component-name">Component Name:</label>
+                <input type="text" id="component-name" name="component-name">
+                <label for="component-evolution">Component Evolution:</label>
+                <div id="evolution-slider">
+                    <div id="evolution">custom</div>
+                    <input type="range" id="component-evolution" name="component-evolution" min="0" max="3" value="1">
+                </div>
+                <button type="submit">Add Component</button>
+            </form>
+        </section>
+
+        <script>
+            const evolutionStages = [
+                'genesis',
+                'custom',
+                'product',
+                'commodity',
+            ];
+
+            function updateFormSelections() {
+                const depForm = document.querySelector('form#add-dependency');
+                const components = document.querySelectorAll('wardley-component');
+                const optionList = generateSelectOptions(components);
+                depForm.querySelector('select[name=source]').innerHTML = optionList;
+                depForm.querySelector('select[name=target]').innerHTML = optionList;
+            }
+
+            function generateSelectOptions(components) {
+                return Array.from(components).map((component) => `<option value="${component.id}">${component.getAttribute('name')}</option>`).join('');
+            }
+
+            function restackDependencies() {
+                const components = document.querySelectorAll('wardley-component');
+                components.forEach(component => {
+                    const dependencies = component.querySelectorAll('wardley-dependency');
+                    dependencies.forEach(dependency => {
+                        component.appendChild(dependency); // Re-stack dependencies to ensure correct tree structure
+                    });
+                });
+            }
+
+            document.querySelectorAll('wardley-map').forEach( (map) => {
+                updateFormSelections();
+                map.addEventListener('change', (event) => {
+                    updateFormSelections();
+                });
+            })
+
+            document.querySelector('form#add-dependency').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const source = event.target['source'].value;
+                const target = event.target['target'].value;
+                const newDependency = document.createElement('wardley-dependency');
+                newDependency.setAttribute('target', target);
+                document.querySelector(`#${source}`).appendChild(newDependency);
+                restackDependencies(); // Ensure dependencies are re-stacked after adding
+            });
+
+            document.querySelector('input[type=range]').addEventListener('input', (event) => {                
+                document.querySelector("#evolution").innerText = evolutionStages[ parseInt( event.target.value) ];
+            });
+            document.querySelector('form#new-component').addEventListener('submit', (event) => {
+                event.preventDefault();
+                const name = event.target['component-name'].value;
+                const evolution = event.target['component-evolution'].value;
+                const newComponent = document.createElement('wardley-component');
+                newComponent.setAttribute('name', name);
+                newComponent.setAttribute('evolution', evolutionStages[ parseInt( evolution) ]);
+                newComponent.setAttribute('id', `c-${name.toLowerCase().replace(/\s+/g, '-')}`);
+                document.querySelector('wardley-map').appendChild(newComponent);
+            });
+        </script>
+
 
     </body>
 </html>
