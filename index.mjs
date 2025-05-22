@@ -14,6 +14,20 @@ class WardleyComponent extends HTMLElement {
     }
 }
 
+class WardleyDependency extends HTMLElement {
+    connectedCallback() {
+    }
+
+    get source() {
+        return this.parentElement;
+    }
+
+    get target() {
+        const targetSelector = this.getAttribute('target');
+        return this.closest('wardley-map').querySelector( `#${targetSelector}` );
+    }
+}
+
 
 class WardleyMap extends HTMLElement {
     constructor() {
@@ -296,3 +310,4 @@ class WardleyMap extends HTMLElement {
 
 customElements.define('wardley-map', WardleyMap);
 customElements.define('wardley-component', WardleyComponent);
+customElements.define('wardley-dependency', WardleyDependency);
