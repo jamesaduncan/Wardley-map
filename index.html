@@ -36,8 +36,15 @@
             }
 
             div#evolution-slider {
+                margin-top: -1em;
                 text-align: center;
                 display: inline-block;
+            }
+
+            fieldset {
+                width: 50%;
+                margin-top: 1em;
+                padding: 1em;
             }
 
             section#map-editor {
@@ -114,26 +121,33 @@
 
         <section id="map-editor">
             <h2>Map Editor</h2>
-            <form id="add-dependency">
-                <label for="source">Source:</label>
-                <select name="source">
-                </select>
-                <label for="target">Target:</label>
-                <select name="target">
-
-                </select>
-                <button type="submit">Add Dependency</button>
-            </form>
 
             <form id="new-component">
-                <label for="component-name">Component Name:</label>
-                <input type="text" id="component-name" name="component-name">
-                <label for="component-evolution">Component Evolution:</label>
-                <div id="evolution-slider">
-                    <div id="evolution">custom</div>
-                    <input type="range" id="component-evolution" name="component-evolution" min="0" max="3" value="1">
-                </div>
-                <button type="submit">Add Component</button>
+                <fieldset>
+                    <legend>New Component</legend>                
+                    <label for="component-name">Component Name:</label>
+                    <input type="text" id="component-name" name="component-name">
+                    <label for="component-evolution">Component Evolution:</label>
+                    <div id="evolution-slider">
+                        <div id="evolution">custom</div>
+                        <input type="range" id="component-evolution" name="component-evolution" min="0" max="3" value="1">
+                    </div>
+                    <button type="submit">Add Component</button>
+                </fieldset>
+            </form>
+
+            <form id="add-dependency">
+                <fieldset>
+                    <legend>Add Dependency</legend>
+                    <label for="source">Source:</label>
+                    <select name="source">
+                    </select>
+                    <label for="target">Target:</label>
+                    <select name="target">
+
+                    </select>
+                    <button type="submit">Add Dependency</button>
+                </fieldset> 
             </form>
         </section>
 
