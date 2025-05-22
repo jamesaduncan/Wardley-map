@@ -14,7 +14,7 @@
 
             body main {
                 margin-left: 5em;
-                
+                width: 50%;                
             }
 
             wardley-component {
@@ -54,70 +54,92 @@
         </style>
     </head>
     <body>
-        <h1>An Example Wardley Map</h1>
+        <h1>A Web Component for Wardley Maps</h1>
 
         <main>
             <p>
-                A simple Web Component that allows you to create Wardley maps in HTML.
+                This is a simple Web Component that allows Wardley maps to be created in HTML.
             </p>
             <p>
-                First, import the module into your code:
+                To use it, first import the module into the HTML document:
 
             <pre><code>&lt;script type="module" src="https://jamesaduncan.github.io/Wardley-map/index.mjs"&gt;&lt;/script&gt;</code></pre>            
             </p>
-
             <p>
-                Then write out your Wardley Map using the <code>&lt;wardley-map&gt;</code> tag.
+                Then write out the Wardley Map using the <code>&lt;wardley-map&gt;</code> tag anywhere in the document's body.
             </p>
             <p>
-                Inside the wardley-map tag, you can add <code>&lt;wardley-component&gt;</code> tags to represent the components of your map.
-                To link components together, use the <code>&lt;wardley-dependency&gt;</code> tag.
+                Inside the wardley-map tag, add <code>&lt;wardley-component&gt;</code> tags to represent the components of your map. Wardley components
+                should have a <code>name</code> attribute that is used to label the component, and an <code>id</code> attribute that is used to identify the component.
+            </p>
+            <p>
+                The <code>evolution</code> attribute of the <code>&lt;wardley-component&gt;</code> tag can be set to one of the following values to
+                alter where on the map the component is placed:
+                <ul>
+                    <li><code>genesis</code></li>
+                    <li><code>custom</code></li>
+                    <li><code>product</code></li>
+                    <li><code>commodity</code></li>
+                </ul>
             </p>
             
             <p>
+                To link components together, use the <code>&lt;wardley-dependency&gt;</code> tag. The dependency should have a <code>target</code> attribute that specifies the 
+                id of the component that it depends on.
+            </p>
+
+            
+            <h2>Example</h2>
+            <p>
                 The following example demonstrates the canonical hot cup of tea map that is frequently
-                used as an example.
+                used as an example in the mapping community:
+            </p>
+
+<inline-example include="true" after="section#map-editor">
+    <wardley-map>
+        <wardley-component id="c-cup-of-tea" name="Cup of Tea" evolution="custom">
+            <wardley-dependency target="c-cup"></wardley-dependency>
+            <wardley-dependency target="c-tea"></wardley-dependency>
+        </wardley-component>
+
+        <wardley-component id="c-cup" name="Cup" evolution="product"></wardley-component>
+        
+        <wardley-component id="c-tea" name="Tea">
+            <wardley-dependency target="c-hot-water"></wardley-dependency>
+            <wardley-dependency target="c-milk"></wardley-dependency>
+            <wardley-dependency target="c-sugar"></wardley-dependency>
+            <wardley-dependency target="c-teabag"></wardley-dependency>
+        </wardley-component>
+
+        <wardley-compenent id="c-milk" name="Milk" evolution="product"></wardley-compenent>
+        <wardley-component id="c-sugar" name="Sugar" evolution="commodity"></wardley-component>
+        <wardley-component id="c-teabag" name="Teabag" evolution="product"></wardley-component>
+
+        <wardley-component id="c-hot-water" name="Hot Water" evolution="custom">
+            <wardley-dependency target="c-water"></wardley-dependency>
+            <wardley-dependency target="c-kettle"></wardley-dependency>
+        </wardley-component>
+
+        <wardley-component id="c-kettle" name="Kettle" evolution="product">
+            <wardley-dependency target="c-electricty"></wardley-dependency>
+            <wardley-dependency target="c-power-company" type="capital">
+            </wardley-dependecy>
+        </wardley-component>
+
+        <wardley-component id="c-water" name="Water" evolution="commodity"></wardley-component>
+
+        <wardley-component id="c-electricty" name="Electricity" evolution="commodity"></wardley-component>
+        <wardley-component id="c-power-company" name="Power Company" evolution="custom"></wardley-component>
+
+    </wardley-map>
+</inline-example>
+
+            <h2>License</h2>
+
+            <p>
+                The Wardley Map web component is open source, licensed under the <a href="https://raw.githubusercontent.com/jamesaduncan/Wardley-map/refs/heads/main/LICENSE">GNU GPL v3.0</a> and is on <a href="https://github.com/jamesaduncan/Wardley-map">GitHub</a>.
             </p>
         </main>
-
-        <inline-example include="true" after="section#map-editor">
-            <wardley-map>
-                <wardley-component id="c-cup-of-tea" name="Cup of Tea" evolution="custom">
-                    <wardley-dependency target="c-cup"></wardley-dependency>
-                    <wardley-dependency target="c-tea"></wardley-dependency>
-                </wardley-component>
-
-                <wardley-component id="c-cup" name="Cup" evolution="product"></wardley-component>
-                
-                <wardley-component id="c-tea" name="Tea">
-                    <wardley-dependency target="c-hot-water"></wardley-dependency>
-                    <wardley-dependency target="c-milk"></wardley-dependency>
-                    <wardley-dependency target="c-sugar"></wardley-dependency>
-                    <wardley-dependency target="c-teabag"></wardley-dependency>
-                </wardley-component>
-
-                <wardley-compenent id="c-milk" name="Milk" evolution="product"></wardley-compenent>
-                <wardley-component id="c-sugar" name="Sugar" evolution="commodity"></wardley-component>
-                <wardley-component id="c-teabag" name="Teabag" evolution="product"></wardley-component>
-
-                <wardley-component id="c-hot-water" name="Hot Water" evolution="custom">
-                    <wardley-dependency target="c-water"></wardley-dependency>
-                    <wardley-dependency target="c-kettle"></wardley-dependency>
-                </wardley-component>
-
-                <wardley-component id="c-kettle" name="Kettle" evolution="product">
-                    <wardley-dependency target="c-electricty"></wardley-dependency>
-                    <wardley-dependency target="c-power-company" type="capital">
-                    </wardley-dependecy>
-                </wardley-component>
-
-                <wardley-component id="c-water" name="Water" evolution="commodity"></wardley-component>
-
-                <wardley-component id="c-electricty" name="Electricity" evolution="commodity"></wardley-component>
-                <wardley-component id="c-power-company" name="Power Company" evolution="custom"></wardley-component>
-
-            </wardley-map>
-        </inline-example>
 
         <section id="map-editor">
             <h2>Map Editor</h2>
