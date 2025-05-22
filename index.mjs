@@ -105,8 +105,6 @@ class WardleyMap extends HTMLElement {
     }
 
     render() {
-        console.log(`rendering wardley map`);
-
         // Re-arrange components before rendering
         this.restackComponents();
 
