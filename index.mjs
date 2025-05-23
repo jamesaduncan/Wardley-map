@@ -53,6 +53,18 @@ class WardleyMap extends HTMLElement {
         this.observer.disconnect();
     }
 
+    *nextStep( stepSize ) {
+        let step = 0;
+        const steps = [ 0.25, 0.5, 0.75 ];
+        while (true) {
+            yield stepSize + (steps[ step ] * stepSize);
+            step++;
+            if (step >= steps.length) {
+                step = 0;
+            }
+        }
+    }
+
     restackComponents() {
         const components = Array.from(this.querySelectorAll('wardley-component'));
         const dependencies = Array.from(this.querySelectorAll('wardley-dependency'));
@@ -105,6 +117,8 @@ class WardleyMap extends HTMLElement {
     }
 
     render() {
+        console.log(`rendering wardley map`);
+
         // Re-arrange components before rendering
         this.restackComponents();
 
@@ -201,10 +215,14 @@ class WardleyMap extends HTMLElement {
             }
         }
 
-        // Calculate y-axis positions dynamically
+        // Calculate y-axis positions dynamically using nextStep generator
         const yBase = 50; // Start from the top
         const yMax = 550; // Ensure components stay above the x-axis
-        const yStep = Math.min((yMax - yBase) / components.length, 50); // Dynamically adjust spacing to fit all components
+        const baseYStep = Math.min((yMax - yBase) / components.length, 50); // Base spacing between components
+        const stepGenerator = this.nextStep(baseYStep);
+
+        // Generate y-axis positions for each component
+        const ySteps = components.map((e,i) => ((yBase * i) + stepGenerator.next().value));
 
         // Map evolution to x-axis positions
         const evolutionPositions = {
@@ -226,9 +244,9 @@ class WardleyMap extends HTMLElement {
 
             if (source && target) {
                 const sourceCx = evolutionPositions[source.getAttribute('evolution')] || 300;
-                const sourceCy = yBase + components.indexOf(source) * yStep;
+                const sourceCy = ySteps[components.indexOf(source)];
                 const targetCx = evolutionPositions[target.getAttribute('evolution')] || 300;
-                const targetCy = yBase + components.indexOf(target) * yStep;
+                const targetCy = ySteps[components.indexOf(target)];
 
                 const line = document.createElementNS(svgNS, 'line');
                 line.classList.add('graph-element');
@@ -263,7 +281,7 @@ class WardleyMap extends HTMLElement {
         components.forEach((component, index) => {
             const evolution = component.getAttribute('evolution') || 'custom';
             const cx = evolutionPositions[evolution] || 300;
-            const cy = yBase + index * yStep; // Stack components top to bottom
+            const cy = ySteps[index]; // Use nextStep-generated yStep for positioning
 
             const circle = document.createElementNS(svgNS, 'circle');
             circle.classList.add('graph-element');

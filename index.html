@@ -41,6 +41,11 @@
             section#map-editor {
                 margin-bottom: 2em;
             }
+
+            #changelog ol {
+                list-style-type: none;
+                padding-left: 0;
+            }
         </style>
     </head>
     <body>
@@ -51,7 +56,7 @@
                 This is a simple Web Component that allows Wardley maps to be created in HTML.
             </p>
             <p>
-                To use it, first import the module into the HTML document:
+                To use it, first import the <a href="https://jamesaduncan.github.io/Wardley-map/index.mjs">module</a> into the HTML document:
 
             <pre><code>&lt;script type="module" src="https://jamesaduncan.github.io/Wardley-map/index.mjs"&gt;&lt;/script&gt;</code></pre>            
             </p>
@@ -147,8 +152,8 @@
                     <input type="text" id="component-name" name="component-name">
                     <label for="component-evolution">Component Evolution:</label>
                     <div id="evolution-slider">
-                        <div id="evolution">custom</div>
-                        <input type="range" id="component-evolution" name="component-evolution" min="0" max="3" value="1">
+                        <div id="evolution">product</div>
+                        <input type="range" id="component-evolution" name="component-evolution" min="0" max="3" value="2">
                     </div>
                     <button type="submit">Add Component</button>
                 </fieldset>
@@ -167,6 +172,44 @@
                     <button type="submit">Add Dependency</button>
                 </fieldset> 
             </form>
+        </section>
+
+        <section id="faq">
+            <h2>Frequently Asked Questions</h2>
+            <ol>
+                <li>
+                    <h3>Why don't you just use (mapkeep|online wardley maps|miro|.+$)?</h3>
+                    <p>
+                        Those tools are all pretty decent, but I don't want to learn another
+                        DSL to draw a map. I want to be able to write an HTML document with a
+                        Wardley map in it, have the browser render it, and have the HTML be
+                        semantically meaningful.
+                    </p>
+                    <p>
+                        It can also be entirely self-contained, and work offline if needed.
+                    </p>
+                    <p>
+                        The web is beautiful, and a web component to do this keeps it beautiful.
+                    </p>
+                </li>
+            </ol>
+        </section>
+
+        <section id="changelog">
+            <h2>Change Log</h2>
+            <ol>
+                <li>
+                    <h3><time datetime="2024-05-23">May 23, 2025</time></h3>
+                    <p>Updated so that the size of the y-step varies slightly each component, while
+                        doing so predictably. This stops the overlapping line problem, which makes it
+                        look as if the map is not showing the dependencies correctly.
+                    </p>
+                </li>
+                <li>
+                    <h3><time datetime="2024-05-22">May 23, 2025</time></h3>
+                    <p>First release of the Wardley Map component</p>
+                </li>
+            </ol>
         </section>
 
         <script>
