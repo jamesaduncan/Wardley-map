@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Wardley Map Example</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width" />        
+        <script type="module" src="httpss://jamesaduncan.github.io/dom-inline-example/index.mjs"></script>
+        <script type="module" src="./index.mjs"></script>
+    </head>
+    <body>
+
+        <h1>A schema for Wardley maps</h1>
+
+        <p>
+            A Wardley map is a way of plotting the components of a busines, organisation or service on a 
+            chart in a way that cartographically sound, which is to say, position has meaning. Wardley maps
+            can then be used to provide situational awareness in business.
+        </p>
+        <p>
+
+        </p>
+
+        <table id="map" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/Schema">
+            <caption itemprop="name">Map</caption>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Cardinality</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr itemprop="property" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/SchemaProperty">
+                    <td itemprop="name">Component</td>
+                    <td itemprop="type">https://jamesaduncan.github.io/Wardley-map/schema/#component</td>
+                    <td itemprop="required">True</td>
+                    <td itemprop="cardinality">Many</td>
+                    <td>
+                        Represents a component on a map. Could be a service, could be a technology, could be any
+                        of a number of things.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table id="component" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/Schema">
+            <caption itemprop="name">Component</caption>
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Cardinality</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr itemprop="property" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/SchemaProperty">
+                    <td itemprop="name">Name</td>
+                    <td itemprop="type">https://schema.org/Text</td>
+                    <td itemprop="required">True</td>
+                    <td itemprop="cadinality">One</td>
+                    <td itemprop="description">
+                        Represents the name of the component on a map
+                    </td>
+                </tr>
+                <tr itemprop="property" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/SchemaProperty">
+                    <td itemprop="name">Evolution</td>
+                    <td itemprop="type">https://schema.org/Text</td>
+                    <td itemprop="required">True</td>
+                    <td itemprop="cadinality">One</td>
+                    <td itemprop="description">
+                        Represents the evolution of a component on a map. Valid values are:
+                        <ul>
+                            <li>Genesis</li>
+                            <li>Custom</li>
+                            <li>Product</li>
+                            <li>Commodity</li>
+                        </ul>
+                    </td>                    
+                </tr>
+                <tr itemprop="property" itemscope itemtype="https://jamesaduncan.github.io/schema-elements/SchemaProperty">
+                    <td itemprop="name">Dependency</td>
+                    <td itemprop="type">https://schema.org/URL</td>
+                    <td itemprop="required">False</td>
+                    <td itemprop="cadinality">Many</td>
+                    <td itemprop="description">
+                        A link to another component on a map.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </body>
+</html>
