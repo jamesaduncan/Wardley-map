@@ -127,102 +127,12 @@ class WardleyMap extends HTMLElement {
 
         const svgNS = 'http://www.w3.org/2000/svg';
 
-        // Check if SVG already exists, otherwise create it
-        let svg = this.shadowRoot.querySelector('svg');
-        if (!svg) {
-            svg = document.createElementNS(svgNS, 'svg');
-            svg.setAttribute('width', '800');
-            svg.setAttribute('height', '600');
-            svg.setAttribute('style', 'border: 1px solid black;');
-            this.shadowRoot.innerHTML = '';
-            this.shadowRoot.appendChild(svg);
-
-            // Add a style element to inherit global styles
-            const style = document.createElement('style');
-            style.textContent = `
-                text {
-                    font-family: var(--wardley-component-font-family, inherit); /* Use CSS variable or inherit */
-                }
-            `;
-            this.shadowRoot.appendChild(style);
-
-            // Draw axes
-            const xAxis = document.createElementNS(svgNS, 'line');
-            xAxis.setAttribute('x1', '50');
-            xAxis.setAttribute('y1', '550');
-            xAxis.setAttribute('x2', '750');
-            xAxis.setAttribute('y2', '550');
-            xAxis.setAttribute('stroke', 'black');
-            xAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(xAxis);
-
-            const yAxis = document.createElementNS(svgNS, 'line');
-            yAxis.setAttribute('x1', '50');
-            yAxis.setAttribute('y1', '550');
-            yAxis.setAttribute('x2', '50');
-            yAxis.setAttribute('y2', '50');
-            yAxis.setAttribute('stroke', 'black');
-            yAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(yAxis);
-
-            // Add axis labels
-            const xLabel = document.createElementNS(svgNS, 'text');
-            xLabel.setAttribute('x', 760 / 2);
-            xLabel.setAttribute('y', '580'); // Adjusted to be below the X-axis
-            xLabel.setAttribute('font-size', '12');
-            xLabel.textContent = 'Evolution';
-            svg.appendChild(xLabel);
-
-            const yLabel = document.createElementNS(svgNS, 'text');
-            yLabel.setAttribute('x', -300);
-            yLabel.setAttribute('y', '40');
-            yLabel.setAttribute('font-size', '12');
-            yLabel.setAttribute('transform', 'rotate(-90, 20, 40)');
-            yLabel.textContent = 'Value Chain';
-            svg.appendChild(yLabel);
-
-            // Map evolution to x-axis positions
-            const evolutionPositions = {
-                'genesis': 100,
-                'custom': 300,
-                'product': 500,
-                'commodity': 700
-            };
-
-            // Add X-axis labels
-            Object.entries(evolutionPositions).forEach(([label, position]) => {
-                const text = document.createElementNS(svgNS, 'text');                
-                text.setAttribute('x', position);
-                text.setAttribute('y', '565');
-                text.setAttribute('font-size', '12');
-                text.setAttribute('text-anchor', 'middle');
-                text.textContent = label.charAt(0).toUpperCase() + label.slice(1);
-                svg.appendChild(text);
-            });
-
-            // Draw dashed lines between evolution stages
-            const evolutionStages = Object.values(evolutionPositions);
-            for (let i = 1; i < evolutionStages.length; i++) {
-                const dashedLine = document.createElementNS(svgNS, 'line');
-                dashedLine.setAttribute('x1', (evolutionStages[i - 1] + evolutionStages[i]) / 2);
-                dashedLine.setAttribute('y1', '550');
-                dashedLine.setAttribute('x2', (evolutionStages[i - 1] + evolutionStages[i]) / 2);
-                dashedLine.setAttribute('y2', '50');
-                dashedLine.setAttribute('stroke', 'gray');
-                dashedLine.setAttribute('stroke-width', '1');
-                dashedLine.setAttribute('stroke-dasharray', '5,5'); // Dashed line
-                svg.appendChild(dashedLine);
-            }
-        }
-
-        // Calculate y-axis positions dynamically using nextStep generator
-        const yBase = 50; // Start from the top
-        const yMax = 550; // Ensure components stay above the x-axis
-        const baseYStep = Math.min((yMax - yBase) / components.length, 50); // Base spacing between components
-        const stepGenerator = this.nextStep(baseYStep);
-
-        // Generate y-axis positions for each component
-        const ySteps = components.map((e,i) => ((yBase * i) + stepGenerator.next().value));
+        // Layout constants
+        const width = 800;
+        const leftAxis = 50;   // x position of the value-chain (y) axis
+        const rightEdge = 750; // x position of the right end of the evolution axis
+        const yTop = 50;       // padding above the first component
+        const yStep = 50;      // vertical distance per component — the map grows with the count
 
         // Map evolution to x-axis positions
         const evolutionPositions = {
@@ -232,8 +142,96 @@ class WardleyMap extends HTMLElement {
             'commodity': 700
         };
 
-        // Clear existing elements in SVG to re-arrange everything
-        Array.from(svg.querySelectorAll('line.graph-element, circle.graph-element, text.graph-element')).forEach(el => el.remove());
+        // Vertical position of each component. A predictable, varying step keeps
+        // dependency lines from overlapping (see nextStep), and because the step
+        // is fixed the drawing grows to fit however many components there are.
+        const stepGenerator = this.nextStep(yStep);
+        const ySteps = components.map((e, i) => (yStep * i) + stepGenerator.next().value);
+
+        // Place the evolution (x) axis just below the lowest component, then size
+        // the canvas to contain it plus room for the axis labels beneath it. This
+        // is what makes the map expand vertically to fit large numbers of items.
+        const lowestComponentY = ySteps.length ? Math.max(...ySteps) : yTop;
+        const axisY = lowestComponentY + 40;
+        const height = axisY + 50;
+
+        // Rebuild the SVG from scratch each render so the axes track the dynamic height.
+        this.shadowRoot.innerHTML = '';
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('style', 'border: 1px solid black;');
+        this.shadowRoot.appendChild(svg);
+
+        // Add a style element to inherit global styles
+        const style = document.createElement('style');
+        style.textContent = `
+            text {
+                font-family: var(--wardley-component-font-family, inherit); /* Use CSS variable or inherit */
+            }
+        `;
+        this.shadowRoot.appendChild(style);
+
+        // Draw axes
+        const xAxis = document.createElementNS(svgNS, 'line');
+        xAxis.setAttribute('x1', leftAxis);
+        xAxis.setAttribute('y1', axisY);
+        xAxis.setAttribute('x2', rightEdge);
+        xAxis.setAttribute('y2', axisY);
+        xAxis.setAttribute('stroke', 'black');
+        xAxis.setAttribute('stroke-width', '2');
+        svg.appendChild(xAxis);
+
+        const yAxis = document.createElementNS(svgNS, 'line');
+        yAxis.setAttribute('x1', leftAxis);
+        yAxis.setAttribute('y1', axisY);
+        yAxis.setAttribute('x2', leftAxis);
+        yAxis.setAttribute('y2', yTop - 20);
+        yAxis.setAttribute('stroke', 'black');
+        yAxis.setAttribute('stroke-width', '2');
+        svg.appendChild(yAxis);
+
+        // Add axis labels
+        const xLabel = document.createElementNS(svgNS, 'text');
+        xLabel.setAttribute('x', width / 2);
+        xLabel.setAttribute('y', axisY + 30); // Below the X-axis
+        xLabel.setAttribute('font-size', '12');
+        xLabel.textContent = 'Evolution';
+        svg.appendChild(xLabel);
+
+        const yLabel = document.createElementNS(svgNS, 'text');
+        yLabel.setAttribute('x', -300);
+        yLabel.setAttribute('y', '40');
+        yLabel.setAttribute('font-size', '12');
+        yLabel.setAttribute('transform', 'rotate(-90, 20, 40)');
+        yLabel.textContent = 'Value Chain';
+        svg.appendChild(yLabel);
+
+        // Add X-axis labels
+        Object.entries(evolutionPositions).forEach(([label, position]) => {
+            const text = document.createElementNS(svgNS, 'text');
+            text.setAttribute('x', position);
+            text.setAttribute('y', axisY + 15);
+            text.setAttribute('font-size', '12');
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+            svg.appendChild(text);
+        });
+
+        // Draw dashed lines between evolution stages
+        const evolutionStages = Object.values(evolutionPositions);
+        for (let i = 1; i < evolutionStages.length; i++) {
+            const dashedLine = document.createElementNS(svgNS, 'line');
+            const dashedX = (evolutionStages[i - 1] + evolutionStages[i]) / 2;
+            dashedLine.setAttribute('x1', dashedX);
+            dashedLine.setAttribute('y1', axisY);
+            dashedLine.setAttribute('x2', dashedX);
+            dashedLine.setAttribute('y2', yTop - 20);
+            dashedLine.setAttribute('stroke', 'gray');
+            dashedLine.setAttribute('stroke-width', '1');
+            dashedLine.setAttribute('stroke-dasharray', '5,5'); // Dashed line
+            svg.appendChild(dashedLine);
+        }
 
         // Draw dependencies first
         dependencies.forEach(dependency => {
@@ -290,9 +288,9 @@ class WardleyMap extends HTMLElement {
             circle.setAttribute('cy', cy);
 
             // Dynamically set radius based on width/height from CSS
-            const width = parseFloat(getComputedStyle(component).width) || 20;
-            const height = parseFloat(getComputedStyle(component).height) || 20;
-            const radius = Math.min(width, height) / 2;
+            const boxWidth = parseFloat(getComputedStyle(component).width) || 20;
+            const boxHeight = parseFloat(getComputedStyle(component).height) || 20;
+            const radius = Math.min(boxWidth, boxHeight) / 2;
             circle.setAttribute('r', radius);
 
             // Apply border and color from CSS
@@ -312,6 +310,37 @@ class WardleyMap extends HTMLElement {
             text.style.fontFamily = getComputedStyle(component).fontFamily; // Apply font-family from CSS
             svg.appendChild(text);
         });
+
+        // Expand the canvas width to fit the longest component label, then add a
+        // viewBox so the whole map scales to the container width. Without this the
+        // right-hand (commodity) labels are clipped on narrow / mobile screens.
+        let maxRight = width;
+        svg.querySelectorAll('text').forEach(label => {
+            const x = parseFloat(label.getAttribute('x')) || 0;
+            let textWidth;
+            try {
+                textWidth = label.getComputedTextLength();
+            } catch (e) {
+                textWidth = 0;
+            }
+            if (!textWidth) {
+                const fontSize = parseFloat(label.getAttribute('font-size')) || 12;
+                textWidth = (label.textContent || '').length * fontSize * 0.6;
+            }
+            // Account for the text-anchor when working out the right-most edge.
+            const anchor = label.getAttribute('text-anchor');
+            const right = anchor === 'middle' ? x + (textWidth / 2)
+                        : anchor === 'end' ? x
+                        : x + textWidth;
+            maxRight = Math.max(maxRight, right);
+        });
+        const finalWidth = Math.ceil(maxRight + 10);
+        svg.setAttribute('width', finalWidth);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', `0 0 ${finalWidth} ${height}`);
+        // Scale down to the container on narrow / mobile screens (the viewBox keeps
+        // the aspect ratio); cap at the natural width so it never blows up on desktop.
+        svg.setAttribute('style', `border: 1px solid black; width: 100%; height: auto; max-width: ${finalWidth}px;`);
 
         // Dispatch a non-bubbling "change" event only on subsequent renderings
         if (this.hasRendered) {
