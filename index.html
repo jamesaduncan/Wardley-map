@@ -199,6 +199,20 @@
             <h2>Change Log</h2>
             <ol>
                 <li>
+                    <h3><time datetime="2026-11-09">November 9, 2026</time></h3>
+                    <p>A new layout engine. Components are arranged in levels down the value chain
+                        so each sits just below whatever depends on it, components on the same level
+                        share a row when they fit, and components in the same evolution stage are
+                        fanned out so dependency lines no longer run through one another. Long names
+                        wrap, labels are drawn over the lines with a halo so they stay readable, and
+                        the axes stretch to fit the content so nothing is drawn off the graph.
+                    </p>
+                    <p>CSS applied to <code>&lt;wardley-component&gt;</code> and
+                        <code>&lt;wardley-dependency&gt;</code> is now honoured in Chrome, where it
+                        was previously ignored.
+                    </p>
+                </li>
+                <li>
                     <h3><time datetime="2024-05-23">May 23, 2025</time></h3>
                     <p>Updated so that the size of the y-step varies slightly each component, while
                         doing so predictably. This stops the overlapping line problem, which makes it
