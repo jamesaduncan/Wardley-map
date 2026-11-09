@@ -37,3 +37,14 @@ A web component to draw Wardley Maps
             <wardley-component id="c-electricty" name="Electricity" evolution="commodity"></wardley-component>
             
         </wardley-map>
+
+# Styling
+
+The map picks up ordinary CSS from the page:
+
+* `wardley-component` — `color` is the fill of the component's circle, `border-color` its outline, `width`/`height` its size and `font-family` its label's font.
+* `wardley-dependency` — `color` is the colour of the dependency line.
+* `wardley-map` — `color` is used for the axes and labels. Set `--wardley-map-background` to change the map's background (and the halo drawn behind labels), which defaults to white.
+
+        wardley-component { color: white; border: 1px solid black; }
+        wardley-dependency { color: #526078; }
